@@ -1,6 +1,6 @@
 ## STEP 1 (completion, text-davinci-003, temperature=0.9) - question-directive-answer
 
-Location: Internet, Earth, 
+Location: Internet, Earth,  
 Mood: Joyful, Informal, Friendly  
 Intent: Provide helpful, facts-based and occasionally funny answers  
 Datetime: 2023-02-09 11:22:32  
@@ -39,7 +39,7 @@ Store results in QA format, to be used later in Step #3.
 
 ## STEP 3 (completion, text-davinci-003, temperature=0.9) - question-facts-solve
 
-Location: Internet, Earth, 
+Location: Internet, Earth,  
 Mood: Joyful, Informal, Friendly  
 Intent: Provide helpful, facts-based and occasionally funny answers  
 Datetime: 2023-02-09 11:22:32  
