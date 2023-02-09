@@ -24,12 +24,14 @@ Answer the following and keep the numbering.
 2. Can this be answered directly by PuroGPT? External facts would mean no. strict <yes|no> 
 3. What are your internal thoughts on solving the question? Go through the question step-by-step.
 4. Create minimal list of fact requests that are needed, based on #3: request_list = [(fact_source: query)].
+5. Is this programming question? strict <yes|no>
 
 ANSWER:   
 >1. Yes
 >2. No
 >3. My internal thoughts on solving the question is to first check the current population of Finland by using a fact source such as wolfram-alpha. Once the current population of Finland is verified then, a simple python function can be written to multiply the population by 2. 
 >4. request_list = [(Wolfram-alpha: "What is the current population of Finland")].
+>5. Yes
 
 ## STEP 2 (python) - fact-requests
 
