@@ -54,17 +54,21 @@ async def on_message(message):
     # Skip messages not meant to me
     if not any(_id in message.content for _id in DISCORD_RESPOND_IDS):
         return
-    
-    msg_from = message.author.name
-    msg_content = message.content
-    for _id in DISCORD_RESPOND_IDS:
-        msg_content = msg_content.replace(_id, CHATBOT_NAME)
-    msg_content = msg_content.strip()
-    print(f">> {msg_from}: {msg_content}")
 
-    # Send prompt to openai
-    openai_response = ask_openai(msg_content)
-    print(f"<< {repr(openai_response)}")
+    # Start the response generation
+    async with message.channel.typing():
+        msg_from = message.author.name
+        msg_content = message.content
+        for _id in DISCORD_RESPOND_IDS:
+            msg_content = msg_content.replace(_id, CHATBOT_NAME)
+        msg_content = msg_content.strip()
+        print(f">> {msg_from}: {msg_content}")
+
+        # Send prompt to openai
+        openai_response = ask_openai(msg_content)
+        print(f"<< {repr(openai_response)}")
+
+    # Send response to discord
     await message.channel.send(openai_response["response"])
 
 
