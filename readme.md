@@ -10,6 +10,13 @@ scripting and prompt templating to create these additional functions on top of D
   script then can process these requests for facts, use third parties as necessary, and help the
   text completion model step-by-step to create the required complex response.
 
+## TODO:
+
+- [X] Short term chatroom-wide memory.
+- [ ] Long term context aware memory.
+- [ ] Context aware wikipedia facts.
+- [ ] Context aware wolfram-alpha facts.
+
 ## Installing
 
 1. Install latest Python 3.
