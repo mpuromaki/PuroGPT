@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime
 import discord
 import openai
+import emoji
 
 DEBUG = True
 LOGFILE = Path(f'logs/{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
@@ -22,7 +23,7 @@ def add_to_memory(text):
         print(f"[d] Add to memory: {text}")
     MEMORY_SHORT_TERM.append(text)
     # Length of short term memory must be limited
-    if len(MEMORY_SHORT_TERM) > 15:
+    if len(MEMORY_SHORT_TERM) > 20:
         if DEBUG:
             print(f"[d] MEMORY_SHORT_TERM: {MEMORY_SHORT_TERM}")
             print(f"[d] Removing from memory: {MEMORY_SHORT_TERM[0]}")
@@ -32,23 +33,24 @@ def add_to_memory(text):
 # --- TEXT FUNCTIONS ---
 
 def append_text(path, text, encoding=None, errors=None):
-   with path.open("a", encoding=encoding, errors=errors) as f:
+    # De-emojize
+    text = emoji.demojize(text)
+    # Write to file
+    with path.open("a", encoding=encoding, errors=errors) as f:
        f.write(text)
 
 def load_kv(filepath):
     static_conf = dict()
     for line in filepath.read_text().splitlines():
-        print(line)
         kv = line.split('=', 1)
-        print(kv)
         static_conf[kv[0]] = kv[1]
     return static_conf
 
 STATIC_CONF = load_kv(Path('static.kv'))
 
-def replace_all(source_text):
+def replace_all(source_text, latest_msg):
     source_text = replace_static(source_text, STATIC_CONF)
-    source_text = replace_dynamic(source_text)
+    source_text = replace_dynamic(source_text, latest_msg)
     source_text = replace_blocks(source_text)
     return source_text
 
@@ -57,29 +59,77 @@ def replace_static(text, static_kv):
         text = text.replace(k, v)
     return text
 
-def replace_dynamic(text):
+def replace_dynamic(text, latest_msg):
     now = datetime.now()
-    text = text.replace('<DYN-DATETIME>', now.strftime("%A, %Y-%m-%d %H:%M:%S"))
+    
+    # Current date and time
+    text = text.replace('<VAR-DATETIME>', now.strftime("%A, %Y-%m-%d %H:%M:%S"))
+
+    # Latest message i.e. question from user
+    text = text.replace('<VAR-LATEST-MESSAGE>', latest_msg)
+    
     return text
 
 def replace_blocks(text):
     # Recent messages from short term memory
     text = text.replace('<BLOCK-RECENT-MESSAGES>', '\n'.join(MEMORY_SHORT_TERM))
+
+    # Related memories from long term memory
+    text = text.replace('<BLOCK-RELATED-MEMORIES>', '')
+
+    # Related facts from external sources
+    text = text.replace('<BLOCK-RELATED-FACTS>', '')
+    
     return text
 
 # --- OPENAI ---
 
 def ask_openai(prompt, temperature=0.8):
-    response = openai.Completion.create(
-        model=OPENAI_MODEL,
-        prompt=prompt,
-        temperature=temperature,
-        max_tokens=128,
-        top_p=1.0,
-        frequency_penalty=0.0,
-        presence_penalty=0.0
-    )
     return_dict = dict()
+
+    # De-emojize prompts to OpenAI.
+    prompt = emoji.demojize(prompt)
+
+    done = False
+    retries = 0
+    retry_limit = 1
+    while not done:
+        try:
+            response = openai.Completion.create(
+                model=OPENAI_MODEL,
+                prompt=prompt,
+                temperature=temperature,
+                max_tokens=2000,
+                top_p=1.0,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
+            )
+            done = True
+        except openai.error.RateLimitError:
+            if retries > retry_limit:
+                pass
+            # Rate limiting error. Sleep and try again.
+            print(f"[i] Rate limit {retries}/{retry_limit}, sleeping.")
+            sleep(1)
+            retries += 1
+
+        except Exception as e:
+            # Something failed?
+            if DEBUG:
+                return_dict["response"] = f"OpenAI request failed: {repr(e)}"
+            else:
+                return_dict["response"] = "Something went wrong in the OpenAI request. sorry."
+            return return_dict
+
+        if retries > retry_limit:
+            # Can not get an answer, bail.
+            return_dict["response"] = "I can not get response due to OpenAI timing out. Sorry about that."
+            return return_dict
+
+    # But we of course want to re-emojize OpenAI answers.
+    response.choices[0].text = emoji.emojize(response.choices[0].text)
+        
+    # We have proper answer from OpenAI
     return_dict["response"] = response.choices[0].text.strip()
     return return_dict
 
@@ -121,13 +171,9 @@ async def on_message(message):
     #if DEBUG:
     #    print(f"[d] Received message: {message}")
 
-    if any(_id in message.content for _id in DISCORD_RESPOND_IDS):
-        # Record to memory and continue
-        msg = parse_discord_message(message)
-        add_to_memory(f"[{msg['datetime']}] {msg['name']}: {msg['content']}")
-    else:
+    msg = parse_discord_message(message)
+    if not any(_id in message.content for _id in DISCORD_RESPOND_IDS):
         # Record to memory and skip
-        msg = parse_discord_message(message)
         add_to_memory(f"[{msg['datetime']}] {msg['name']}: {msg['content']}")
         return
 
@@ -141,7 +187,7 @@ async def on_message(message):
             print(f"[d] >> {msg}")
 
         # Create the prompt
-        prompt = replace_all(Path('templates/chat.template').read_text())
+        prompt = replace_all(Path('templates/chat.template').read_text(), f"[{msg['datetime']}] {msg['name']}: {msg['content']}")
 
         if DEBUG:
             append_text(LOGFILE, '\n' + prompt + '\n')
@@ -150,9 +196,15 @@ async def on_message(message):
         openai_response = ask_openai(prompt)
         print(f"<< {repr(openai_response)}")
 
-        if DEBUG:
-            append_text(LOGFILE, '\n' + repr(openai_response) + '\n')
+    # Save last message to memory
+    add_to_memory(f"[{msg['datetime']}] {msg['name']}: {msg['content']}")
+    
+    # Save our reponse to memory
+    now = datetime.now()
+    add_to_memory(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] {STATIC_CONF['<VAR-CHATBOT-NAME>']}: {openai_response['response']}")
 
+    if DEBUG:
+        append_text(LOGFILE, '-'*80 + '\n' + 'OpenAI Response:\n' + openai_response['response'] + '\n' + '-'*80 + '\n\n')
 
     # Send response to discord
     await message.channel.send(openai_response["response"])
@@ -161,7 +213,7 @@ async def on_message(message):
 # --- MAIN LOOP ---
 
 if __name__ == "__main__":
-    print("=== Starting PuroGPT ===")
+    print("=== Starting Chatbot ===")
     print(f"[i] Discord API-KEY: {DISCORD_API_KEY}")
     print(f"[i] OpenAI API-KEY: {OPENAI_API_KEY}")
     print(f"[i] Static configuration: {repr(STATIC_CONF)}")
