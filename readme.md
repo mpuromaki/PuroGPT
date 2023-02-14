@@ -23,4 +23,5 @@ scripting and prompt templating to create these additional functions on top of D
 1. Install latest Python 3.
 2. Install Discord python library: pip install -U discord.py
 3. Install OpenAI python library: pip install -U openai
+3. Install Numpy python library: pip install -U numpy
 
