@@ -1,0 +1,4 @@
+.discord_api_key
+.openai_api_key
+discord_channel_ids.list
+discord_respond_ids.list
