@@ -13,7 +13,7 @@ scripting and prompt templating to create these additional functions on top of D
 ## TODO:
 
 - [X] Short term chatroom-wide memory.
-- [ ] Long term context aware memory.
+- [X] Long term context aware memory.
 - [ ] The concept of conversations.
 - [ ] Context aware wikipedia facts.
 - [ ] Context aware wolfram-alpha facts.
