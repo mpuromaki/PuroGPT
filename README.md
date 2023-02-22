@@ -1,5 +1,7 @@
 # Chatbot I call PuroGPT
 
+This is discord chatbot that use OpenAI API for generating responses.
+
 Idea is to use OpenAI text completion models for complex "AI". It should be possible to utilise python
 scripting and prompt templating to create these additional functions on top of Davinci text completion:
 
