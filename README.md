@@ -45,7 +45,7 @@ def add_to_memory(text):
 
 Long term memory is now internal list of messages from others. This list is loaded from sqlite db on startup and any new messages are written to the in-memory list as well as to the sqlite db. For each long-term memory message something called ```embedding``` is calculated by OpenAI. These embeddings work as a semantic ID, which can be used to search for "closeness". 
 
-When responding to a new message, the chatbot will calculate embedding for that new message. This embedding is then compared to the embeddings in long-term memory using numpy dot-product for scoring. Highest _n_ scoring messages are included in the propmt as semantically nearest long term memories. This functionality definitely can be improved, but even this simple implementation is pretty cool!
+When responding to a new message, the chatbot will calculate embedding for that new message. This embedding is then compared to the embeddings in long-term memory using numpy dot-product for scoring. Highest _n_ scoring messages are included in the prompt as semantically nearest long term memories. This functionality definitely can be improved, but even this simple implementation is pretty cool!
 
 ```python
 def append_ltm(msg):
