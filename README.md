@@ -48,6 +48,8 @@ While chat logs are always inlcuded for context, they might not be the most impo
 
 I'm thinking: ```Sentiment > Chat History > Long-term memory```
 
+There might be need to do some kind of prioritizing recursive summary function to fit all this context into the token limit of selected LLM. This order of importance might play as a factor in choosing what to summarize and how much.
+
 ### Open questions
 
 - How to generate quality sentiment over time? There has to be some kind of trustworthiness metric based on the source. Somehow known users are more trustworthy, Creator is more trustworthy, results of fact queries (ReAct loop) should be trustworthy-ish?
