@@ -46,7 +46,7 @@ On the "AI" architecture I'm working on following things:
 Clearly when using chat logs, long-term memories and sentiments in the same place, there must be some kind of ```order of importance```.
 While chat logs are always inlcuded for context, they might not be the most important part.
 
-I'm thinking: ```Sentiment > Chat Log > Long-term memory```
+I'm thinking: ```Sentiment > Chat History > Long-term memory```
 
 ### Open questions
 
