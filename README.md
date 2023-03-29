@@ -32,7 +32,7 @@ On the "AI" architecture I'm working on following things:
   - Template relevant ```sentiment```, based on vector search.
   - LLM rewrite the new message into fully self-contained ```independent message```.
   - LLM anticipate users actual information needs, generate couple additional ```enriching questions``` of the same topic.
-  - LLM replace ```long-term memories``` with relevant ones based on ```independent message``` and ```enriching questions```.
+  - LLM replace ```long-term memories``` and ```sentiments``` with relevant ones based on ```independent message``` and ```enriching questions```.
   - ```Agent ReAct loop``` with this rich context, chat history and independent message.
   - Finally generate ```single reply``` to the user.
 - PostgreSQL database & pgvector
