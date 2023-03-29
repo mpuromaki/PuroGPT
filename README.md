@@ -1,24 +1,62 @@
 # Chatbot I call PuroGPT
 
-This is discord chatbot that use OpenAI API for generating responses.
+This is discord chatbot that uses OpenAI API to participate in conversations.
 
-Idea is to use OpenAI text completion models for complex "AI". It should be possible to utilise python
-scripting and prompt templating to create these additional functions on top of Davinci text completion:
+This project is in constant state of flux, while this public repository is older snapshot.
+As you might know, in March 2023 the state of "AI" is very rapidly changing.
+When I get something substantial finished, I'll update this repository to reflect the changes. Everything will change. Stay tuned.
 
-* Multi-step processing. Chatbot should recognize the need to process the request in multiple steps.
-* Internal reasoning. Chatbot should use "message-to-self" type information to help guide itself
-  in the multi-step process of generating an response.
-* External requests. Chatbot should recognize the need for external resources for facts. The python
-  script then can process these requests for facts, use third parties as necessary, and help the
-  text completion model step-by-step to create the required complex response.
+## So, What's the plan?
 
-## TODO:
+The first version of this chatbot was very simple, basically just plumbed-together Discord API, OpenAI text completion API and sqlite + In-memory data structure working as persistent long-term memory (vector embeddings of previous conversations).
+Since then I've studied this field a lot more and agree a lot with David Shapiros reasons on why "AI" needs proper cognitive architecture.
+At first I was designing my own text-template based architecture, but now it's clear that LangChain is the way to go forward.
 
-- [X] Short term chatroom-wide memory.
-- [X] Long term context aware memory.
-- [ ] The concept of conversations.
-- [ ] Context aware wikipedia facts.
-- [ ] Context aware wolfram-alpha facts.
+Thus, at high level, following software will be needed:
+
+- Discord integration
+- OpenAI LLM integration
+- LangChain
+- PostgreSQL pgvector extension
+
+Those are in the works as soon as I'm able to. Idea is to spin up "pet" VM just for this project, which will automatically update from this repository. I am going to keep the update strategy simple: pull & update on startup. Some kind of ```Creator Commands``` might be good idea, so that I can command restart over Discord directly.
+
+On the "AI" architecture I'm working on following things:
+
+- LangChain
+  - Template ```Core Objective Functions```, ```Personality```.
+  - Template ```Dynamic Information```, eq. date and time and such.
+  - LLM classify is this new message completely new conversation, part of current conversation, or part of some earlier conversation?
+  - Template ```chat history``` of the selected conversation.
+  - Template relevant ```long-term memories```, based on vector search.
+  - Template relevant ```sentiment```, based on vector search.
+  - LLM rewrite the new message into fully self-contained ```independent message```.
+  - LLM anticipate users actual information needs, generate couple additional ```enriching questions``` of the same topic.
+  - LLM replace ```long-term memories``` with relevant ones based on ```independent message``` and ```enriching questions```.
+  - ```Agent ReAct loop``` with this rich context, chat history and independent message.
+  - Finally generate ```single reply``` to the user.
+- PostgreSQL database & pgvector
+  - Even the ongoing chat histories have to be in DB, as multiple conversations can be going on at the same time in the same room.
+  - Nightly (during ```sleep```), process these conversations in to executively summarized, salient, long-term memories. 
+  - Nightly (during ```sleep```), generate sentiment labels from long-term memories.
+  - Nightly (during ```sleep```), take random sampling of current sentiments and update them based on latest long-term memories about that topic.
+  
+### Order of importance
+
+Clearly when using chat logs, long-term memories and sentiments in the same place, there must be some kind of ```order of importance```.
+While chat logs are always inlcuded for context, they might not be the most important part.
+
+I'm thinking: ```Sentiment > Chat Log > Long-term memory```
+
+### Open questions
+
+- How to generate quality sentiment over time? There has to be some kind of trustworthiness metric based on the source. Somehow known users are more trustworthy, Creator is more trustworthy, results of fact queries (ReAct loop) should be trustworthy-ish?
+- Is there a need for some kind of knowledge-base or semantic web for data structuring?
+- Some kind of system for ```Creator Commands``` is needed.
+- Some kind of debug system is needed. I'm thinking that creator could start the message with ```--debug``` and response would be processing steps in separate message and then normal actual response from the chat bot.
+- Maybe ```Knowledge Base``` is not from the chat messages, but separate database with preprocessed data from files and/or internet sources? Maybe "AI" could be instructed to load some source, preprocess it and then reply to message with that source available.
+- There are multiple sources of context for each message. Token limit might be very easily reached, so some kind of prioritized recursive summarization might be needed. 
+
 
 ## Installing
 
@@ -28,7 +66,7 @@ scripting and prompt templating to create these additional functions on top of D
 4. Install Numpy python library: pip install -U numpy
 5. Fill the configuration files and enjoy!
 
-## How this works?
+## How this works? (NOTE: Old information, to be changed)
 
 ### Short-term memory
 
